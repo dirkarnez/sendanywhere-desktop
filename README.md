@@ -1,5 +1,6 @@
 sendanywhere-desktop
 ====================
+This project DOES NOT use Clang, but mingw64
 
 ### How to build
 - `.\local-build.cmd`
