@@ -6,9 +6,12 @@ void callback(SendAnywhereState state, SendAnywhereDetailedState detailedState,
 	int i;
 
 	if(state == SENDANYWHERE_STATE_PREPARING) {
-		if(detailedState == SENDANYWHERE_DETAILED_STATE_PREPARING_UPDATED_KEY) {
-			const wchar_t* key = (const wchar_t*)param;
-			printf("key: %ls\n", key);
+		if(detailedState == SENDANYWHERE_DETAILED_STATE_PREPARING_UPDATED_FILE_LIST) {
+			const SendAnywhereAllTransferFileInfo* files = (const SendAnywhereAllTransferFileInfo*)param;
+			for(i=0; i<files->number; ++i) {
+				SendAnywhereTransferFileInfo* file = files->fileInfo + i;
+				printf("%ls : %lld bytes\n", file->name, file->size);
+			}
 		}
 	} else if(state == SENDANYWHERE_STATE_TRANSFERRING) {
 		const SendAnywhereTransferFileInfo* file = (const SendAnywhereTransferFileInfo*)param;
@@ -30,21 +33,23 @@ void callback(SendAnywhereState state, SendAnywhereDetailedState detailedState,
 		case SENDANYWHERE_DETAILED_STATE_ERROR_SERVER:
 			printf("Network or Server Error!\n");
 			break;
-		case SENDANYWHERE_DETAILED_STATE_ERROR_NO_REQUEST:
-			printf("Timeout for waiting recipient\n");
+		case SENDANYWHERE_DETAILED_STATE_ERROR_FILE_NO_DOWNLOAD_PATH:
+			printf("Download path does not exist!\n");
 			break;
-		case SENDANYWHERE_DETAILED_STATE_ERROR_NO_EXIST_FILE:
-			printf("No exist files!\n");
+		case SENDANYWHERE_DETAILED_STATE_ERROR_FILE_NO_DISK_SPACE:
+			printf("No disk space!\n");
+			break;
+		case SENDANYWHERE_DETAILED_STATE_ERROR_NO_EXIST_KEY:
+			printf("Wrong KEY!\n");
 			break;
 		}
 	}
-};
+}
 
 int main(int argc, char** argv) {
 	sendanywhere_init("8b75c2f76418fe47d6eb95604a8ae5003b5ce3af", ".sendanywhere-token");
 
-	const wchar_t* files[] = { L"Makefile" };
-	SendAnywhereTask task = sendanywhere_create_send(files, sizeof(files)/sizeof(wchar_t*));
+	SendAnywhereTask task = sendanywhere_create_receive(L"KEY", L"./");
 	sendanywhere_set_listner(task, callback, 0);
 
 	sendanywhere_start(task);

@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.18)
 
-project(SendAnywhereSDK)
+project("SendAnywhereSDK")
 
-include_directories(include)
+include_directories("include")
 
-add_library(SendAnywhereSDK src/sendanywhere.c)
+add_library(${PROJECT_NAME} src/sendanywhere.c)
 
-target_link_libraries(SendAnywhereSDK sendanywhere)
+target_link_libraries(${PROJECT_NAME} sendanywhere)

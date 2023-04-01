@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.18)
 
-project(SendAnywhereSDK)
+add_subdirectory(SDK)
+
+project("sendanywhere-desktop")
 
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 
@@ -20,6 +22,11 @@ elseif(UNIX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/linux/${ARCHITECTURE})
 endif()
 
-add_subdirectory(SDK)
-add_subdirectory(example)
+target_include_directories(SendAnywhereSDK PUBLIC "SDK/include")
+
+add_executable(sample_send src/sample_send.c)
+target_link_libraries(sample_send SendAnywhereSDK)
+
+add_executable(sample_receive src/sample_receive.c)
+target_link_libraries(sample_receive SendAnywhereSDK)
 

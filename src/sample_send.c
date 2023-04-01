@@ -1,4 +1,5 @@
 #include "sendanywhere.h"
+#include <stdlib.h>
 #include <stdio.h>
 
 void callback(SendAnywhereState state, SendAnywhereDetailedState detailedState,
@@ -6,12 +7,9 @@ void callback(SendAnywhereState state, SendAnywhereDetailedState detailedState,
 	int i;
 
 	if(state == SENDANYWHERE_STATE_PREPARING) {
-		if(detailedState == SENDANYWHERE_DETAILED_STATE_PREPARING_UPDATED_FILE_LIST) {
-			const SendAnywhereAllTransferFileInfo* files = (const SendAnywhereAllTransferFileInfo*)param;
-			for(i=0; i<files->number; ++i) {
-				SendAnywhereTransferFileInfo* file = files->fileInfo + i;
-				printf("%ls : %lld bytes\n", file->name, file->size);
-			}
+		if(detailedState == SENDANYWHERE_DETAILED_STATE_PREPARING_UPDATED_KEY) {
+			const wchar_t* key = (const wchar_t*)param;
+			printf("key: %ls\n", key);
 		}
 	} else if(state == SENDANYWHERE_STATE_TRANSFERRING) {
 		const SendAnywhereTransferFileInfo* file = (const SendAnywhereTransferFileInfo*)param;
@@ -33,23 +31,29 @@ void callback(SendAnywhereState state, SendAnywhereDetailedState detailedState,
 		case SENDANYWHERE_DETAILED_STATE_ERROR_SERVER:
 			printf("Network or Server Error!\n");
 			break;
-		case SENDANYWHERE_DETAILED_STATE_ERROR_FILE_NO_DOWNLOAD_PATH:
-			printf("Download path does not exist!\n");
+		case SENDANYWHERE_DETAILED_STATE_ERROR_NO_REQUEST:
+			printf("Timeout for waiting recipient\n");
 			break;
-		case SENDANYWHERE_DETAILED_STATE_ERROR_FILE_NO_DISK_SPACE:
-			printf("No disk space!\n");
-			break;
-		case SENDANYWHERE_DETAILED_STATE_ERROR_NO_EXIST_KEY:
-			printf("Wrong KEY!\n");
+		case SENDANYWHERE_DETAILED_STATE_ERROR_NO_EXIST_FILE:
+			printf("No exist files!\n");
 			break;
 		}
 	}
-}
+};
+
 
 int main(int argc, char** argv) {
-	sendanywhere_init("YOUR_API_KEY", ".sendanywhere-token");
+	sendanywhere_init("8b75c2f76418fe47d6eb95604a8ae5003b5ce3af", ".sendanywhere-token");
 
-	SendAnywhereTask task = sendanywhere_create_receive(L"KEY", L"/tmp");
+	wchar_t** files = (wchar_t**)malloc(sizeof(wchar_t**)* (argc - 1)); 
+
+    for (int i = 1; i < argc; i++) {
+		const size_t cSize = strlen(argv[i]) + 1;
+		files[i] = (wchar_t*)malloc(sizeof(wchar_t*)*cSize); 
+		mbstowcs (files[i], argv[i], cSize); 
+	}
+	
+	SendAnywhereTask task = sendanywhere_create_send(files, argc - 1);
 	sendanywhere_set_listner(task, callback, 0);
 
 	sendanywhere_start(task);
